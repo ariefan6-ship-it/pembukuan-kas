@@ -330,16 +330,29 @@
         const totalDayIncome = dayRegIncome + dayMakanExtraIncome;
 
         const targetObj = tabunganTargets[dateStr] || { uraian: '', nominal: 0 };
-        const dayTargetTabungan = Number(targetObj.nominal) || 0;
+        const maxTabunganTarget = Number(targetObj.nominal) || 0;
 
-        // Pembagian 3 Slot Harian dari Pemasukan Reguler
+        // 1. Alokasi Modal (50% dari Pemasukan Reguler)
         const alokasiModal = dayRegIncome * 0.50;
-        const alokasiTabungan = dayTargetTabungan;
-        
-        let rawMakan = dayRegIncome - alokasiModal - alokasiTabungan;
-        const alokasiMakanBase = rawMakan < 0 ? 0 : rawMakan;
 
-        // Total Alokasi Uang Makan Hari Ini = Alokasi Reguler + Pemasukan Khusus Makan
+        // 2. Sisa Pemasukan setelah dikurangi Modal
+        const sisaPemasukan = dayRegIncome - alokasiModal;
+
+        // 3. Tabungan diambil dari sisa pemasukan, tetapi dibatasi oleh Batas Maksimal (Target)
+        let alokasiTabungan = 0;
+        if (sisaPemasukan > 0) {
+          if (maxTabunganTarget > 0) {
+            alokasiTabungan = Math.min(sisaPemasukan, maxTabunganTarget);
+          } else {
+            alokasiTabungan = sisaPemasukan;
+          }
+        }
+
+        // 4. Sisa setelah Tabungan dialokasikan ke Uang Makan (ditambah pemasukan khusus makan)
+        const sisaUntukMakan = sisaPemasukan - alokasiTabungan;
+        const alokasiMakanBase = sisaUntukMakan < 0 ? 0 : sisaUntukMakan;
+
+        // Total Alokasi Uang Makan Hari Ini
         const totalAlokasiMakan = alokasiMakanBase + dayMakanExtraIncome;
 
         currentModal += alokasiModal;
